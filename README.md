@@ -202,23 +202,29 @@ Strict-Transport-Security: max-age: 31536000; includeSubDomains; preload
 
 ## SRI — Subresource integrity hashes
 
-SRI adds checksums to your <script src> and <style src> elements, and enforces them on the loaded sources. If the checksum doesn't match, the content isn't loaded. This protects against content injection attacks. It's best to have some automated way of calculating and updating checksums in your site repository. Firefox and Chrome support SRI and can be used to develop and test it. SRI decays gracefully on older browsers, which ignore the 'integrity' attribute entirely and simply load the unchecked content as usual.
+SRI adds checksums to your ```<script src>``` and ```<style src>``` elements, and enforces them on the loaded sources. If the checksum doesn't match, the content isn't loaded. This protects against content injection attacks. It's best to have some automated way of calculating and updating checksums in your site repository. Firefox and Chrome support SRI and can be used to develop and test it. SRI decays gracefully on older browsers, which ignore the 'integrity' attribute entirely and simply load the unchecked content as usual.
 
 ### Offsite only
 
-If your site loads <script src> or <style src> from some other site (CSP -src policy more than 'self'), and that content will never change (e.g. jquery-1.11.2.min.js), then you can calculate the SRI checksum for that content and include it in the page. If that site ever gets hacked, your site will break *without* exposing your visitors to hacked JS.
+If your site loads ```<script src>``` or ```<style src>``` from some other site (CSP -src policy more than 'self'), and that content will never change (e.g. jquery-1.11.2.min.js), then you can calculate the SRI checksum for that content and include it in the page. If that site ever gets hacked, your site will break *without* exposing your visitors to hacked JS.
 
-<link rel="stylesheet" type="text/css" href="css-1.2.3.min.css" integrity="sha384-X7L1bh.....">
+```
+<link rel="stylesheet" type="text/css" href="css-1.2.3.min.css" integrity="sha384-X7L1bh.....">```
 
 <script type="text/javascript" src="js-1.2.3.min.js" integrity="sha384-UMMEM1.....">
+```
 
 You can calculate the SRI checksum for a single filename using this command:
 
+```
 echo -n 'sha384-'; openssl dgst -sha384 -binary < *filename* | openssl enc -base64 -A; echo;
+```
 
 And you can download a single remote source (to calculate a checksum) using this command:
 
+```
 curl -o *filename* https://remote/js/css
+```
 
 ### Everything
 
