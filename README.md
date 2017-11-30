@@ -351,13 +351,13 @@ Strict-Transport-Security: ...
 
 ##### Observatory local scanner
 
-Clone [gh:mozilla/http-observatory](https://github.com/mozilla/http-observatory) and open README.md. The heading "Running a scan from the local codebase" provides the necessary steps to get it running on any Python3 capable system. OS X users can access Python3 safely through homebrew using ‘brew install python3’.
+Clone [gh:mozilla/http-observatory](https://github.com/mozilla/http-observatory) and open README.md. The heading "Running a scan from the local codebase" provides the necessary steps to get it running on any Python3 capable system. OS X users can access Python3 safely through homebrew using `brew install python3`.
 
 If the site you’re accessing has SSO session cookies that are necessary to scan it correctly, use your favorite browser’s developer tools console to find the cookie and copy it into the JSON.
 
-If the site you’re accessing has basic authorization, you can capture your password *as plaintext* by copying the value of the request header ‘Authorization’ and specifying it using JSON.
+If the site you’re accessing has basic authorization, you can capture your password *as plaintext* by copying the value of the request header `Authorization` and specifying it using JSON.
 
-In both the cookie and header cases, the JSON structure is { "name": “value”, “name”: “value” }. When you provide the correct cookies and/or headers, the site should permit you to request and access the root at https://. Take special care to protect these JSON blobs, as those session cookies could be reused to hack whatever site you’re trying to secure.
+In both the cookie and header cases, the JSON structure is `{ "name": "value", "name": "value" }`. When you provide the correct cookies and/or headers, the site should permit you to request and access the root at `https://`. Take special care to protect these JSON blobs, as those session cookies could be reused to hack whatever site you’re trying to secure.
 
 ```bash
 httpobs-local-scan --format report --cookies '{"foo": "bar"}' example.com   # --headers
