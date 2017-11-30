@@ -53,20 +53,19 @@ Content-Security-Policy: …; frame-ancestors: 'self' ; …
 If the site needs to permit specific other sites besides itself to frame it, then those sites can permitted either instead of or in addition to the site itself. XFO cannot be used in this case — ALLOW-FROM is not supported — and must removed. This clause supports only domain names and URI protocols, with one possible wildcard. Single-quotes MUST be used with 'self' and 'none', and MUST NOT be used with domains and protocols. Trailing slashes MUST NOT be used with domains. The trailing colon MUST be present on protocols. Several example clauses follow:
 
 ```http
-Content-Security-Policy: frame-ancestors: …
+Content-Security-Policy: frame-ancestors: 'self' https://xyz.com ;
 
-'self' https://xyz.com ;
-https://*.bcd.com ;
-https://*.efg.com:4443 http://bcd.com ;
+Content-Security-Policy: frame-ancestors: https://*.bcd.com ;
+
+Content-Security-Policy: frame-ancestors: https://*.efg.com:4443 http://bcd.com ;
 ```
 
 Very rarely, a site needs to permit all other sites to frame it. This is uncommon but can occur. Evaluate carefully whether it’s safe for a site to be framed. Sites with a ‘login’ feature should not permit framing by arbitrary sources. If necessary, framing can be permitted either by HTTPS sites only – or otherwise it can be permitted by all sites – using a CSP clause. XFO cannot be used in this case and must be removed. It is important to declare a framing policy for the site, both for the Observatory score and to indicate that we evaluated the site to need this policy.
 
 ```http
-Content-Security-Policy: frame-ancestors: …
+Content-Security-Policy: frame-ancestors: … https: ;
 
-https: ;
-* ;
+Content-Security-Policy: frame-ancestors: … https: * ;
 ```
 
 ### XXP — X-XSS-Protection
@@ -104,10 +103,7 @@ If you're working with CSP headers, you must disable all content blocker extensi
 The below CSP header is generally safe when applied to most sites, without any further tuning. It blocks `<object>` tags from activating browser plugins like Flash, permits only HTTPS resources, and makes no assertions about framing (see XFO, above). It is less secure than a carefully-tuned CSP header, but it’s also better than none at all. It will not a substitute for a proper CSP evaluation, and will only gain a few points on the observatory, but at least it’s there.
 
 ```http
-Content-Security-Policy:
-
-default-src: https: 'unsafe-inline';
-object-src: 'none';
+Content-Security-Policy: default-src: https: 'unsafe-inline'; object-src: 'none';
 ```
 
 Always be in the developer console, even if you don't have time to write a CSP header, or you'll miss important errors.
@@ -127,13 +123,13 @@ Content-Security-Policy: *<example>*
 #### Valid examples:
 
 ```http
-frame-ancestors: 'self' https: http://insecure.site.com:8080;
+Content-Security-Policy: frame-ancestors: 'self' https: http://insecure.site.com:8080;
 ```
 
 This example contains one CSP attribute, ‘frame-ancestors’, with three parameters. The ‘self’ parameter is one of the special parameters, and MUST always be quoted. The protocol scheme and domain parameters MUST NOT be quoted.
 
 ```http
-default-src: 'none'; script-src: 'self' https://jquery.com; object-src: *; img-src: data:;
+Content-Security-Policy: default-src: 'none'; script-src: 'self' https://jquery.com; object-src: *; img-src: data:;
 ```
 
 Three attributes, terminated by semicolons. ‘default-src’ sets the default for all -src directives (‘frame-ancestors’, for instance, is not included in its defaults). ‘\*’ here means "any source except data: URIs", which is usually interpreted to mean “all sources”. Images may be loaded from data: URIs and nowhere else. This is not a very practical header.
@@ -141,19 +137,19 @@ Three attributes, terminated by semicolons. ‘default-src’ sets the default f
 #### Invalid examples:
 
 ```http
-default-src: none;
+Content-Security-Policy: default-src: none;
 ```
 
 The unquoted none here is invalid. For whatever reason, CSP explicitly quotes specific values. Those values vary per attribute, but are all single-quoted.
 
 ```http
-default-src: 'https:' 'http://example.com' '*';
+Content-Security-Policy: default-src: 'https:' 'http://example.com' '*';
 ```
 
 The quoted clauses here are invalid. CSP only permits quoting of the special values. Protocols, URIs, and the wildcard aren’t special values.
 
 ```http
-script-src: 'unsafe-inline' 'hash-8f7as9d8f7as9d7f';
+Content-Security-Policy: script-src: 'unsafe-inline' 'hash-8f7as9d8f7as9d7f';
 ```
 
 Trick question. The syntax is correct, but the spec for this attribute prohibits mixing these two values.
@@ -163,14 +159,7 @@ Trick question. The syntax is correct, but the spec for this attribute prohibits
 Begin with the below CSP header. It disables most things by default and will almost certainly break every site it’s applied to at first. Newlines are only for the purpose of explanation; all CSP clauses should be one header with a single, one-line, value.
 
 ```http
-Content-Security-Policy:
-
-frame-ancestors: 'none';
-default-src: 'none';
-img-src: 'self';
-script-src: 'self';
-style-src: 'self';
-font-src: 'self';
+Content-Security-Policy: frame-ancestors: 'none'; default-src: 'none'; img-src: 'self'; script-src: 'self'; style-src: 'self'; font-src: 'self';
 ```
 
 If you can ship your site with this policy and you don’t encounter any CSP errors in your developer tools, congratulations. If not, you’ll need to start adding exceptions. Each time a page resource violates the CSP policy, it will log an error to the developer console. Reviewing those errors is the only known way of testing a CSP policy at this time.
@@ -184,8 +173,7 @@ Framing is prohibited initially by ‘none’, but can be permitted by setting v
 The default ‘none’ prohibits the resources, and then the various ‘self’ permit resources that are loaded from the site itself. This is often sufficient for some sites, but will break for offsite resources. For example, to fix Google Fonts, the following policy attributes would be needed:
 
 ```http
-font-src: … https://fonts.gstatic.com …;
-style-src: … https://fonts.googleapis.com …;
+Content-Security-Policy: …; font-src: … https://fonts.gstatic.com …; style-src: … https://fonts.googleapis.com …; …
 ```
 
 #### On * and data: URIs in -src policies
@@ -193,7 +181,7 @@ style-src: … https://fonts.googleapis.com …;
 When writing -src policies such as `img-src: *;`, it's essential to know that the wildcard does not match `data:` URIs. There's a weird browser spec where you can encode a file as base64 and then say `data:base64goeshere`, and the browser will actually load up the base64 from the URI rather than from some file on disk or remote URL or whatever. CSP does not include `data:` URIs in the wildcard because they're unsafe in certain ways, and because they're rare. If your site uses them, add them as you would any other URL. Valid example:
 
 ```http
-style-src: 'self' data: 'unsafe-inline' https://styles.example.com;
+Content-Security-Policy: style-src: 'self' data: 'unsafe-inline' https://styles.example.com;
 ```
 
 #### Inline scripts and styles
@@ -203,9 +191,7 @@ Many sites write `<script>` and `<style>` tags directly into their page source, 
 ##### hash-src: SHA256 content hashes
 
 ```http
-Content-Security-Policy:
-
-style-src: 'sha256-18234717fdsa7f' 'sha256-77vdnqnejru';
+Content-Security-Policy: style-src: 'sha256-18234717fdsa7f' 'sha256-77vdnqnejru';
 ```
 
 ```html
@@ -218,9 +204,7 @@ Each time the page is generated and served to the user, the SHA256 hashes of the
 ##### nonce-src: Random single-use nonces
 
 ```http
-Content-Security-Policy:
-
-script-src: 'nonce-1284sdfa8a7fa';
+Content-Security-Policy: script-src: 'nonce-1284sdfa8a7fa';
 ```
 
 ```html
@@ -232,9 +216,7 @@ Each time the page is generated and served to the user, a new random nonce hash 
 ##### unsafe-inline: Permit inline content
 
 ```http
-Content-Security-Policy:
-
-script-src: 'unsafe-inline';
+Content-Security-Policy: script-src: 'unsafe-inline';
 ```
 
 ```html
@@ -275,16 +257,12 @@ If your site loads `<script src>` or `<style src>` from some other site (CSP -sr
 <script type="text/javascript" src="js-1.2.3.min.js" integrity="sha384-UMMEM1.....">
 ```
 
-You can calculate the SRI checksum for a single filename using this command:
+You can download a single remote source and calculate its SRI checksum using this pair of commands:
 
-```bash
-echo -n 'sha384-'; openssl dgst -sha384 -binary < *filename* | openssl enc -base64 -A; echo;
-```
-
-And you can download a single remote source (to calculate a checksum) using this command:
-
-```bash
-curl -o *filename* https://remote/js/css
+```console
+$ curl -so *filename* https://remote/js/css
+$ echo -n 'sha384-'; openssl dgst -sha384 -binary < *filename* | openssl enc -base64 -A; echo;
+sha384-xbU6pVHkitzbyZA9.....
 ```
 
 #### Everything
