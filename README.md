@@ -36,21 +36,21 @@ Strict-Transport-Security: max-age: 63072000; includeSubDomains
 
 The simplest defense to clickjacking is to simply prohibit a site from being loaded in a frame by undesirable sites. We typically choose to prohibit all framing of a site, but several options exist. Depending on the option chosen, this can require either an HTTP header and/or a CSP clause. Testing is mandatory here, as with all things involving CSP, but the testing required is less than is required for other CSP clauses.
 
-If framing should be prohibited entirely, then we use both the HTTP header and the CSP clause, as shown below. XFO: DENY is supported by older clients and CSP: frame-ancestors is supported by newer clients. No other CSP clause interacts with the frame-ancestors directive, and default-src doesn’t affect it. Defining a CSP with only the frame-ancestors clause will not activate any other CSP protections. Neither default-src nor any other CSP clauses interact with frame-ancestors, so it is generally safe to prepend to any existing policy.
+If framing should be prohibited entirely, then we use both the HTTP header and the CSP clause, as shown below. `X-Frame-Options: DENY` is supported by older clients and `Content-Security-Policy: frame-ancestors: …;` is supported by newer clients. No other CSP clause interacts with the `frame-ancestors` directive, and `default-src` doesn’t affect it. Defining a CSP with only the `frame-ancestors` clause will not activate any other CSP protections. Neither `default-src` nor any other CSP clauses interact with `frame-ancestors`, so it is generally safe to prepend to any existing policy.
 
 ```http
 X-Frame-Options: DENY
 Content-Security-Policy: …; frame-ancestors: 'none' ; …
 ```
 
-If the site needs to frame itself — that is, if a page https://xyz/one expects to frame https://xyz/two — then we use the XFO: SAMEORIGIN policy and accompanying CSP clause. This does not permit other sites to frame it, but is effective for sites that expect framing.
+If the site needs to frame itself — that is, if a page `https://xyz/one` expects to frame `https://xyz/two` — then we use the `X-Frame-Options: SAMEORIGIN` policy and accompanying CSP clause. This does not permit other sites to frame it, but is effective for sites that expect framing.
 
 ```http
 X-Frame-Options: SAMEORIGIN
 Content-Security-Policy: …; frame-ancestors: 'self' ; …
 ```
 
-If the site needs to permit specific other sites besides itself to frame it, then those sites can permitted either instead of or in addition to the site itself. XFO cannot be used in this case — ALLOW-FROM is not supported — and must removed. This clause supports only domain names and URI protocols, with one possible wildcard. Single-quotes MUST be used with 'self' and 'none', and MUST NOT be used with domains and protocols. Trailing slashes MUST NOT be used with domains. The trailing colon MUST be present on protocols. Several example clauses follow:
+If the site needs to permit specific other sites besides itself to frame it, then those sites can permitted either instead of or in addition to the site itself. XFO cannot be used in this case — `ALLOW-FROM` is not supported — and must removed. This clause supports only domain names and URI protocols, with one possible wildcard. Single-quotes MUST be used with 'self' and 'none', and MUST NOT be used with domains and protocols. Trailing slashes MUST NOT be used with domains. The trailing colon MUST be present on protocols. Several example clauses follow:
 
 ```http
 Content-Security-Policy: frame-ancestors: 'self' https://xyz.com ;
@@ -100,7 +100,7 @@ If you're working with CSP, you need to have your browsers' developer consoles o
 
 ### Always disable content blocker extensions in your browsers.
 
-If you're working with CSP headers, you must disable all content blocker extensions in your browsers. Otherwise you may not be testing the same site as other users. If your CSP work is impacted by a content blocker, it will likely show as unexpected script-src and img-src warnings — along with the site failing to load — to users without those blockers.
+If you're working with CSP headers, you must disable all content blocker extensions in your browsers. Otherwise you may not be testing the same site as other users. If your CSP work is impacted by a content blocker, it will likely show as unexpected `script-src` and `img-src` warnings — along with the site failing to load — to users without those blockers.
 
 ### I don’t have time for this right now.
 
@@ -130,13 +130,13 @@ Content-Security-Policy: *<example>*
 Content-Security-Policy: frame-ancestors: 'self' https: http://insecure.site.com:8080;
 ```
 
-This example contains one CSP attribute, ‘frame-ancestors’, with three parameters. The ‘self’ parameter is one of the special parameters, and MUST always be quoted. The protocol scheme and domain parameters MUST NOT be quoted.
+This example contains one CSP attribute, `frame-ancestors`, with three parameters. The `'self'` parameter is one of the special parameters, and MUST always be quoted. The protocol scheme and domain parameters MUST NOT be quoted.
 
 ```http
 Content-Security-Policy: default-src: 'none'; script-src: 'self' https://jquery.com; object-src: *; img-src: data:;
 ```
 
-Three attributes, terminated by semicolons. ‘default-src’ sets the default for all -src directives (‘frame-ancestors’, for instance, is not included in its defaults). ‘\*’ here means "any source except data: URIs", which is usually interpreted to mean “all sources”. Images may be loaded from data: URIs and nowhere else. This is not a very practical header.
+Three attributes, terminated by semicolons. `default-src` sets the default for all `-src` directives (`frame-ancestors`, for instance, is not included in its defaults). `*` here means "any source except `data:` URIs", which is usually interpreted to mean “all sources”. Images may be loaded from `data:` URIs and nowhere else. This is not a very practical header.
 
 #### Invalid examples:
 
@@ -170,11 +170,11 @@ If you can ship your site with this policy and you don’t encounter any CSP err
 
 #### Framing permissions
 
-Framing is prohibited initially by ‘none’, but can be permitted by setting various framing options. See the "XFO — X-Frame-Options" section earlier in this document for more guidance here.
+Framing is prohibited initially by `'none'`, but can be permitted by setting various framing options. See the "XFO — X-Frame-Options" section earlier in this document for more guidance here.
 
 #### Defaults none and self
 
-The default ‘none’ prohibits the resources, and then the various ‘self’ permit resources that are loaded from the site itself. This is often sufficient for some sites, but will break for offsite resources. For example, to fix Google Fonts, the following policy attributes would be needed:
+The default `'none'` prohibits the resources, and then the various `'self'` permit resources that are loaded from the site itself. This is often sufficient for some sites, but will break for offsite resources. For example, to fix Google Fonts, the following policy attributes would be needed:
 
 ```http
 Content-Security-Policy: …; font-src: … https://fonts.gstatic.com …; style-src: … https://fonts.googleapis.com …; …
@@ -182,7 +182,7 @@ Content-Security-Policy: …; font-src: … https://fonts.gstatic.com …; style
 
 #### On * and data: URIs in -src policies
 
-When writing -src policies such as `img-src: *;`, it's essential to know that the wildcard does not match `data:` URIs. There's a weird browser spec where you can encode a file as base64 and then say `data:base64goeshere`, and the browser will actually load up the base64 from the URI rather than from some file on disk or remote URL or whatever. CSP does not include `data:` URIs in the wildcard because they're unsafe in certain ways, and because they're rare. If your site uses them, add them as you would any other URL. Valid example:
+When writing `-src` policies such as `img-src: *;`, it's essential to know that the wildcard does not match `data:` URIs. There's a weird browser spec where you can encode a file as base64 and then say `data:base64goeshere`, and the browser will actually load up the base64 from the URI rather than from some file on disk or remote URL or whatever. CSP does not include `data:` URIs in the wildcard because they're unsafe in certain ways, and because they're rare. If your site uses them, add them as you would any other URL. Valid example:
 
 ```http
 Content-Security-Policy: style-src: 'self' data: 'unsafe-inline' https://styles.example.com;
@@ -253,7 +253,7 @@ SRI adds checksums to your `<script src>` and `<style src>` elements, and enforc
 
 #### Offsite only
 
-If your site loads `<script src>` or `<style src>` from some other site (CSP -src policy more than 'self'), and that content will never change (e.g. jquery-1.11.2.min.js), then you can calculate the SRI checksum for that content and include it in the page. If that site ever gets hacked, your site will break *without* exposing your visitors to hacked JS.
+If your site loads `<script src>` or `<style src>` from some other site (CSP `-src` policy more than `'self'`), and that content will never change (e.g. `jquery-1.11.2.min.js`), then you can calculate the SRI checksum for that content and include it in the page. If that site ever gets hacked, your site will break *without* exposing your visitors to hacked JS.
 
 ```html
 <link rel="stylesheet" type="text/css" href="css-1.2.3.min.css" integrity="sha384-X7L1bh.....">
@@ -313,7 +313,7 @@ Be wary of any of [the other options](https://www.w3.org/TR/referrer-policy/) un
 
 [https://wiki.mozilla.org/Security/Guidelines/Web_Security](https://wiki.mozilla.org/Security/Guidelines/Web_Security)
 
-This is a reference manual, covering all of the headers we expect to be using for this work. I recommend setting aside an hour and reading the entire document top to bottom once, and then using it as a reference manual when evaluating how to secure sites. Clicking on the ‘Order’ column heading on the table at the top will sort it from "most important" to “least important”, as evaluated by the web security team, but our ordering varies somewhat from theirs.
+This is a reference manual, covering all of the headers we expect to be using for this work. I recommend setting aside an hour and reading the entire document top to bottom once, and then using it as a reference manual when evaluating how to secure sites. Clicking on the ‘Order’ column heading on the table at the top will sort it from “most important” to “least important”, as evaluated by the web security team, but our ordering varies somewhat from theirs.
 
 ### The 26-step CSP generator
 
