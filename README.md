@@ -8,7 +8,7 @@ CSP is difficult to design, test, and deploy. This section addresses non-CSP iss
 
 SSO gateways do not use the same web security headers as the site they intercept and authenticate for. While this is not always to our liking, it presents a complication. Observatory will follow redirects to a final endpoint site, whatever that may be. We’re nearly always interested in securing *our* site, post-SSO, rather than the *SSO* site, which gets a known score.
 
-To scan a site beyond SSO, you must sign in to the SSO site in your browser, locate whatever cookies they use for SSO, and include those in your Observatory scans. For a Webops site hosted with `mod_auth_mellon` for SAML SSO, these are the `X-Mapping` and `mellon` cookies. You put these cookies into a JSON hash of `{ "cookie-name": "cookie-value" }` and pass that JSON hash on the command line to the Observatory local scanner. HTTP headers are set using the same JSON format. See the heading ‘[Observatory local scanner](#heading=h.6iq4oajdpqb7)’ later in this document.
+To scan a site beyond SSO, you must sign in to the SSO site in your browser, locate whatever cookies they use for SSO, and include those in your Observatory scans. For a Webops site hosted with `mod_auth_mellon` for SAML SSO, these are the `X-Mapping` and `mellon` cookies. You put these cookies into a JSON hash of `{ "cookie-name": "cookie-value" }` and pass that JSON hash on the command line to the Observatory local scanner. HTTP headers are set using the same JSON format. See the heading ‘[Observatory local scanner](#observatory-local-scanner)’ later in this document.
 
 ### HTTPS — SSL/TLS certificates
 
@@ -16,9 +16,9 @@ The majority of the sites we secure are HTTPS, with an HTTP-to-HTTPS redirect. O
 
 First, ensure that the site has HTTPS-capable clients, and that they’ll be able to follow the HTTP-to-HTTPS redirect. This is usually the case for human beings operating a browser, but may not be true for features built-in to a browser and other automated clients. In rare cases, we’ll set up the HTTPS site and then alter clients one-by-one to use HTTPS instead, with an eventual redirect-or-shutdown once that work has concluded.
 
-Second, set up an HTTPS endpoint for that site, using a trusted SSL certificate. This is usually easy as we host most sites ourselves, but sometimes they’re offsite at a SaaS provider. We usually issue our SSL certificates from Digicert for Zeus-hosted sites and from Amazon for ELB-hosted sites, with occasional use of Let’s Encrypt and Thawte. (In very rare cases certificate pinning dictates the SSL issuer; this is strongly discouraged. See heading '[HPKP](#heading=h.ehvm3s3awelk)' for more information.)
+Second, set up an HTTPS endpoint for that site, using a trusted SSL certificate. This is usually easy as we host most sites ourselves, but sometimes they’re offsite at a SaaS provider. We usually issue our SSL certificates from Digicert for Zeus-hosted sites and from Amazon for ELB-hosted sites, with occasional use of Let’s Encrypt and Thawte. (In very rare cases certificate pinning dictates the SSL issuer; this is strongly discouraged. See heading '[HPKP](#hpkp--http-public-key-pinning)' for more information.)
 
-Third, redirect HTTP to HTTPS. There are an essential set of rules associated with doing this — `http://xyz` must always redirect to `https://xyz`, even if the eventual target is `https://bcd`; and, HSTS should be set on `https://xyz`, even if the eventual target is `https://bcd` — that the observatory scanner will call out for you if any repairs are required. See heading '[curl](#heading=h.dtr0iaswt1tn)' for more.
+Third, redirect HTTP to HTTPS. There are an essential set of rules associated with doing this — `http://xyz` must always redirect to `https://xyz`, even if the eventual target is `https://bcd`; and, HSTS should be set on `https://xyz`, even if the eventual target is `https://bcd` — that the observatory scanner will call out for you if any repairs are required. See heading '[curl](#curl)' for more.
 
 ### HSTS — Strict-Transport-Security
 
