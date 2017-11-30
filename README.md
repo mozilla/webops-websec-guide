@@ -28,7 +28,7 @@ Occasionally a site will not be HTTPS-only — for instance, Relengweb or HG —
 
 Most sites should protect both the domain and all subdomains thereof. We prefer to use a 2-year time interval when a site has been operating under SSL with HTTP-to-HTTPS redirects for some period of time but occasionally proceed with the more careful 1 minute / 1 hour / 1 day intervals to handle any issues. The following example will work for most domains. `includeSubdomains` MUST NOT be used on any top-level domain where we do not control the subdomains, such as `mozilla.com` and `mozilla.org`.
 
-```
+```http
 Strict-Transport-Security: max-age: 63072000; includeSubDomains
 ```
 
@@ -38,21 +38,21 @@ The simplest defense to clickjacking is to simply prohibit a site from being loa
 
 If framing should be prohibited entirely, then we use both the HTTP header and the CSP clause, as shown below. XFO: DENY is supported by older clients and CSP: frame-ancestors is supported by newer clients. No other CSP clause interacts with the frame-ancestors directive, and default-src doesn’t affect it. Defining a CSP with only the frame-ancestors clause will not activate any other CSP protections. Neither default-src nor any other CSP clauses interact with frame-ancestors, so it is generally safe to prepend to any existing policy.
 
-```
+```http
 X-Frame-Options: DENY
 Content-Security-Policy: …; frame-ancestors: 'none' ; …
 ```
 
 If the site needs to frame itself — that is, if a page https://xyz/one expects to frame https://xyz/two — then we use the XFO: SAMEORIGIN policy and accompanying CSP clause. This does not permit other sites to frame it, but is effective for sites that expect framing.
 
-```
+```http
 X-Frame-Options: SAMEORIGIN
 Content-Security-Policy: …; frame-ancestors: 'self' ; …
 ```
 
 If the site needs to permit specific other sites besides itself to frame it, then those sites can permitted either instead of or in addition to the site itself. XFO cannot be used in this case — ALLOW-FROM is not supported — and must removed. This clause supports only domain names and URI protocols, with one possible wildcard. Single-quotes MUST be used with 'self' and 'none', and MUST NOT be used with domains and protocols. Trailing slashes MUST NOT be used with domains. The trailing colon MUST be present on protocols. Several example clauses follow:
 
-```
+```http
 Content-Security-Policy: frame-ancestors: …
 
 'self' https://xyz.com ;
@@ -62,7 +62,7 @@ https://*.efg.com:4443 http://bcd.com ;
 
 Very rarely, a site needs to permit all other sites to frame it. This is uncommon but can occur. Evaluate carefully whether it’s safe for a site to be framed. Sites with a ‘login’ feature should not permit framing by arbitrary sources. If necessary, framing can be permitted either by HTTPS sites only – or otherwise it can be permitted by all sites – using a CSP clause. XFO cannot be used in this case and must be removed. It is important to declare a framing policy for the site, both for the Observatory score and to indicate that we evaluated the site to need this policy.
 
-```
+```http
 Content-Security-Policy: frame-ancestors: …
 
 https: ;
@@ -73,7 +73,7 @@ https: ;
 
 This header instructs certain browsers (MSIE 8+) to automatically defend against XSS attacks. We generally enable it on all sites as it only rarely causes false positives, and only on MSIE. We have not run into any instances where this header had to be removed. It is not a complete defense against XSS attacks, and should be combined with other protections. It’s an easy win.
 
-```
+```http
 X-XSS-Protection: 1; mode=block
 ```
 
@@ -81,7 +81,7 @@ X-XSS-Protection: 1; mode=block
 
 This header prevents browsers from using ‘magic’ file detection routines to override the Content-Type provided by the server. This can, for instance, be abused by malicious actors to serve Windows executable files with a filename of .png that ends up being executed somehow by the client. Any site depending on this behavior is at risk of the site breaking if/when the browser’s ‘magic’ routines change. We haven’t found any sites that break when this is applied.
 
-```
+```http
 X-Content-Type-Options: nosniff
 ```
 
@@ -103,7 +103,7 @@ If you're working with CSP headers, you must disable all content blocker extensi
 
 The below CSP header is generally safe when applied to most sites, without any further tuning. It blocks `<object>` tags from activating browser plugins like Flash, permits only HTTPS resources, and makes no assertions about framing (see XFO, above). It is less secure than a carefully-tuned CSP header, but it’s also better than none at all. It will not a substitute for a proper CSP evaluation, and will only gain a few points on the observatory, but at least it’s there.
 
-```
+```http
 Content-Security-Policy:
 
 default-src: https: 'unsafe-inline';
@@ -120,19 +120,19 @@ Using Mozilla's "[Laboratory](https://addons.mozilla.org/en-US/firefox/addon/lab
 
 CSP’s header syntax is somewhat tricky, and is easier to convey using examples. These clauses will be explained later on. Each of these examples is a valid CSP header, though they may not be particularly useful when copy-pasted into a given site.
 
-```
+```http
 Content-Security-Policy: *<example>*
 ```
 
 #### Valid examples:
 
-```
+```http
 frame-ancestors: 'self' https: http://insecure.site.com:8080;
 ```
 
 This example contains one CSP attribute, ‘frame-ancestors’, with three parameters. The ‘self’ parameter is one of the special parameters, and MUST always be quoted. The protocol scheme and domain parameters MUST NOT be quoted.
 
-```
+```http
 default-src: 'none'; script-src: 'self' https://jquery.com; object-src: *; img-src: data:;
 ```
 
@@ -140,19 +140,19 @@ Three attributes, terminated by semicolons. ‘default-src’ sets the default f
 
 #### Invalid examples:
 
-```
+```http
 default-src: none;
 ```
 
 The unquoted none here is invalid. For whatever reason, CSP explicitly quotes specific values. Those values vary per attribute, but are all single-quoted.
 
-```
+```http
 default-src: 'https:' 'http://example.com' '*';
 ```
 
 The quoted clauses here are invalid. CSP only permits quoting of the special values. Protocols, URIs, and the wildcard aren’t special values.
 
-```
+```http
 script-src: 'unsafe-inline' 'hash-8f7as9d8f7as9d7f';
 ```
 
@@ -162,7 +162,7 @@ Trick question. The syntax is correct, but the spec for this attribute prohibits
 
 Begin with the below CSP header. It disables most things by default and will almost certainly break every site it’s applied to at first. Newlines are only for the purpose of explanation; all CSP clauses should be one header with a single, one-line, value.
 
-```
+```http
 Content-Security-Policy:
 
 frame-ancestors: 'none';
@@ -183,7 +183,7 @@ Framing is prohibited initially by ‘none’, but can be permitted by setting v
 
 The default ‘none’ prohibits the resources, and then the various ‘self’ permit resources that are loaded from the site itself. This is often sufficient for some sites, but will break for offsite resources. For example, to fix Google Fonts, the following policy attributes would be needed:
 
-```
+```http
 font-src: … https://fonts.gstatic.com …;
 style-src: … https://fonts.googleapis.com …;
 ```
@@ -192,7 +192,7 @@ style-src: … https://fonts.googleapis.com …;
 
 When writing -src policies such as `img-src: *;`, it's essential to know that the wildcard does not match `data:` URIs. There's a weird browser spec where you can encode a file as base64 and then say `data:base64goeshere`, and the browser will actually load up the base64 from the URI rather than from some file on disk or remote URL or whatever. CSP does not include `data:` URIs in the wildcard because they're unsafe in certain ways, and because they're rare. If your site uses them, add them as you would any other URL. Valid example:
 
-```
+```http
 style-src: 'self' data: 'unsafe-inline' https://styles.example.com;
 ```
 
@@ -202,11 +202,13 @@ Many sites write `<script>` and `<style>` tags directly into their page source, 
 
 ##### hash-src: SHA256 content hashes
 
-```
+```http
 Content-Security-Policy:
 
 style-src: 'sha256-18234717fdsa7f' 'sha256-77vdnqnejru';
+```
 
+```html
 <style> P.DIV { font: bold; } </style>
 <style src="77vdnqnejru.css"></style>
 ```
@@ -215,11 +217,13 @@ Each time the page is generated and served to the user, the SHA256 hashes of the
 
 ##### nonce-src: Random single-use nonces
 
-```
+```http
 Content-Security-Policy:
 
 script-src: 'nonce-1284sdfa8a7fa';
+```
 
+```html
 <script nonce="1284sdfa8a7fa"> window.alert(1); </script>
 ```
 
@@ -227,11 +231,13 @@ Each time the page is generated and served to the user, a new random nonce hash 
 
 ##### unsafe-inline: Permit inline content
 
-```
+```http
 Content-Security-Policy:
 
 script-src: 'unsafe-inline';
+```
 
+```html
 <script> window.alert(1); </script>
 ```
 
@@ -251,7 +257,7 @@ If you’re motivated to go the extra mile, here’s some of the ways you can do
 
 We encourage submitting new domain names to the HSTS Preload list. Once accepted, and after some time has passed, all modern browsers will force an implied policy of "max-age: forever; includeSubDomains" for all requests to all hostnames at your domain. Approval is automatic once you add the preload clause. Removal is not: there is generally no way to remove a site from the list once it's added. To submit a domain name, make sure your site's HSTS header already had includeSubDomains, add preload, and then [submit it to the preload list](https://hstspreload.org/). (If it doesn't already have includeSubDomains, adding it will enforce the declared HSTS policy across all sites at your domain.)
 
-```
+```http
 Strict-Transport-Security: max-age: 63072000; includeSubDomains; preload
 ```
 
@@ -263,7 +269,7 @@ SRI adds checksums to your `<script src>` and `<style src>` elements, and enforc
 
 If your site loads `<script src>` or `<style src>` from some other site (CSP -src policy more than 'self'), and that content will never change (e.g. jquery-1.11.2.min.js), then you can calculate the SRI checksum for that content and include it in the page. If that site ever gets hacked, your site will break *without* exposing your visitors to hacked JS.
 
-```
+```html
 <link rel="stylesheet" type="text/css" href="css-1.2.3.min.css" integrity="sha384-X7L1bh.....">
 
 <script type="text/javascript" src="js-1.2.3.min.js" integrity="sha384-UMMEM1.....">
@@ -271,13 +277,13 @@ If your site loads `<script src>` or `<style src>` from some other site (CSP -sr
 
 You can calculate the SRI checksum for a single filename using this command:
 
-```
+```bash
 echo -n 'sha384-'; openssl dgst -sha384 -binary < *filename* | openssl enc -base64 -A; echo;
 ```
 
 And you can download a single remote source (to calculate a checksum) using this command:
 
-```
+```bash
 curl -o *filename* https://remote/js/css
 ```
 
@@ -303,7 +309,7 @@ You can ask browsers to not only require HTTPS to your site, but also to require
 
 Referrer-Policy is a header that lets you specify how capable browsers should treat the Referrer header when visiting your site. Support varies for the options available. It's important to plan for what happens when browsers ignore your first choice of policy. Consider starting with this header:
 
-```
+```http
 Referrer-Policy: strict-origin-when-cross-origin
 ```
 
@@ -311,7 +317,7 @@ This is a safer 'default' policy that still provides you referrer headers for re
 
 If you're confident your site doesn't need to be listed in referrer headers, you can disable them and save bandwidth:
 
-```
+```http
 Referrer-Policy: no-referrers
 ```
 
@@ -343,6 +349,7 @@ Once you’re familiar with how to build a CSP header, you could theoretically u
 
 curl has no local caching between runs, making it a perfect tool for testing things that browsers would normally cache. It's an efficient way to inspect and confirm that a chain of site x -> site y redirects are done correctly to ensure that the site x HSTS header is sent to the client before sending them off to site-y.
 
+```console
 $ curl -v http://site-x
 Location: https://site-x
 
@@ -356,6 +363,7 @@ Location: https://site-y
 $ curl -v https://site-y
 Content-Type: text/html
 Strict-Transport-Security: ...
+```
 
 ##### Observatory local scanner
 
@@ -367,7 +375,9 @@ If the site you’re accessing has basic authorization, you can capture your pas
 
 In both the cookie and header cases, the JSON structure is { "name": “value”, “name”: “value” }. When you provide the correct cookies and/or headers, the site should permit you to request and access the root at https://. Take special care to protect these JSON blobs, as those session cookies could be reused to hack whatever site you’re trying to secure.
 
+```bash
 httpobs-local-scan --format report --cookies '{"foo": "bar"}' example.com   # --headers
+```
 
 This command outputs a clear report that can be copy-pasted, diff’d, and so forth.
 
