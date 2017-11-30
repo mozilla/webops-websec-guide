@@ -60,12 +60,16 @@ Content-Security-Policy: frame-ancestors: https://*.bcd.com ;
 Content-Security-Policy: frame-ancestors: https://*.efg.com:4443 http://bcd.com ;
 ```
 
-Very rarely, a site needs to permit all other sites to frame it. This is uncommon but can occur. Evaluate carefully whether it’s safe for a site to be framed. Sites with a ‘login’ feature should not permit framing by arbitrary sources. If necessary, framing can be permitted either by HTTPS sites only – or otherwise it can be permitted by all sites – using a CSP clause. XFO cannot be used in this case and must be removed. It is important to declare a framing policy for the site, both for the Observatory score and to indicate that we evaluated the site to need this policy.
+Very rarely, a site needs to permit all other sites to frame it. This is uncommon but can occur. Evaluate carefully whether it’s safe for a site to be framed. Sites with a ‘login’ feature should not permit framing by arbitrary sources. If necessary, framing can be permitted by all sites using a CSP clause. XFO cannot be used in this case and must be removed. It is important to declare a framing policy for the site, both for the Observatory score and to indicate that we evaluated the site to need this policy.
 
 ```http
-Content-Security-Policy: frame-ancestors: … https: ;
+Content-Security-Policy: frame-ancestors: * ;
+```
 
-Content-Security-Policy: frame-ancestors: … https: * ;
+If your site meets this requirement, consider only permitting HTTPS sites to frame your site to protect user privacy and encourage HTTPS usage.
+
+```http
+Content-Security-Policy: frame-ancestors: https: ;
 ```
 
 ### XXP — X-XSS-Protection
