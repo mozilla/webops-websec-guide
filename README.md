@@ -279,7 +279,9 @@ You can write a build process for your site that calculates SRI hashes for every
 
 A draft CSP extension 'require-sri-for' permits you to tell browsers to refuse to load sources that do not have SRI integrity attributes. This extension is available today, off-by-default, in release channel Firefox and Chrome, and the Observatory [will add support](https://github.com/mozilla/http-observatory/issues/216) for it once the browsers enabled support for it by default. If you enable this policy, please also enable browser support and test.
 
+```http
 Content-Security-Policy: …; require-sri-for: script style; …
+```
 
 ### HPKP — HTTP Public Key Pinning
 
