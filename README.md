@@ -1,5 +1,7 @@
 # Securing WebOps websites using Web Security Headers
 
+Last updated: December 2017
+
 ## First, everything but CSP.
 
 CSP is difficult to design, test, and deploy. This section addresses non-CSP issues first, so that we can gain valuable security improvements prior to tackling CSP.
